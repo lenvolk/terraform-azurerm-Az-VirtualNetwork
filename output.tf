@@ -22,9 +22,9 @@ output "subnet_ids" {
   value = [for x in azurerm_subnet.subnets : x.id]
 
 }
-output "network_security_group_ids" {
-  value = [for x in azurerm_network_security_group.nsgs : x.id]
-}
+# output "network_security_group_ids" {
+#   value = [for x in azurerm_network_security_group.nsgs : x.id]
+# }
 
 # output "route_table_ids" {
 #   value = [for x in azurerm_route_table.rts : x.id]
