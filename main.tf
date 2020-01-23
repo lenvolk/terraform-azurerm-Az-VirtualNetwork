@@ -181,9 +181,9 @@ locals {
   subnets_network_security_group = zipmap(local.subnet_names_network_security_group, local.subnet_nsg_keys_network_security_group)
 }
 
-resource "azurerm_subnet_network_security_group_association" "security_group_associations" {
-  for_each                  = local.subnets_network_security_group
-  network_security_group_id = lookup(azurerm_network_security_group.nsgs, each.value["nsg_key"], null)["id"]
+# resource "azurerm_subnet_network_security_group_association" "security_group_associations" {
+#   for_each                  = local.subnets_network_security_group
+#   network_security_group_id = lookup(azurerm_network_security_group.nsgs, each.value["nsg_key"], null)["id"]
 
   /*
   This forces a destroy when adding a new vnet --> 
