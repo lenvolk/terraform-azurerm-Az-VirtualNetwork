@@ -25,13 +25,14 @@ output "subnet_ids" {
 output "network_security_group_ids" {
   value = [for x in azurerm_network_security_group.nsgs : x.id]
 }
-output "route_table_ids" {
-  value = [for x in azurerm_route_table.rts : x.id]
-}
 
-output "public_ip_ids" {
-  value = [for x in azurerm_public_ip.pips : x.id]
-}
+# output "route_table_ids" {
+#   value = [for x in azurerm_route_table.rts : x.id]
+# }
+
+# output "public_ip_ids" {
+#   value = [for x in azurerm_public_ip.pips : x.id]
+# }
 
 # -
 # - Network - Map outputs
