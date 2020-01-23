@@ -60,32 +60,32 @@ variable "subnets" {
 # -
 # - Route Table
 # -
-variable "route_tables" {
-  description = "The route tables with their properties."
-  type        = any
-}
+# variable "route_tables" {
+#   description = "The route tables with their properties."
+#   type        = any
+# }
 
 # -
 # - Network Security Group
 # -
-variable "network_security_groups" {
-  description = "The network security groups with their properties."
-  type        = any
-  /*
-  #This implies a crash described here https://github.com/hashicorp/terraform/issues/22082 -->
-  type = list(object({
-    id             = string
-    security_rules = any
-  }))
-  */
-}
+# variable "network_security_groups" {
+#   description = "The network security groups with their properties."
+#   type        = any
+#   /*
+#   #This implies a crash described here https://github.com/hashicorp/terraform/issues/22082 -->
+#   type = list(object({
+#     id             = string
+#     security_rules = any
+#   }))
+#   */
+# }
 
 # -
 # - Public Ip
 # -
 
-variable "pips" {
-  description = "Public Ips with their parameters decscribed here : https://www.terraform.io/docs/providers/azurerm/r/public_ip.html."
-  type        = any #map implies a crash
-  default     = {}
-}
+# variable "pips" {
+#   description = "Public Ips with their parameters decscribed here : https://www.terraform.io/docs/providers/azurerm/r/public_ip.html."
+#   type        = any #map implies a crash
+#   default     = {}
+# }

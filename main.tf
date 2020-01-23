@@ -11,6 +11,8 @@ data "azurerm_resource_group" "network" {
   name = var.network_resource_group_name
 }
 
+data "azurerm_subscription" "current" {}
+
 locals {
   location = var.net_location == "" ? data.azurerm_resource_group.network.location : var.net_location
   tags     = merge(var.net_additional_tags, data.azurerm_resource_group.network.tags)
@@ -87,24 +89,24 @@ resource "azurerm_subnet" "subnets" {
 # -
 # - Route Table
 # -
-resource "azurerm_route_table" "rts" {
-  for_each                      = var.route_tables
-  name                          = "${var.net_prefix}-rt${each.value["id"]}"
-  location                      = local.location
-  resource_group_name           = data.azurerm_resource_group.network.name
-  disable_bgp_route_propagation = lookup(each.value, "disable_bgp_route_propagation", null)
+# resource "azurerm_route_table" "rts" {
+#   for_each                      = var.route_tables
+#   name                          = "${var.net_prefix}-rt${each.value["id"]}"
+#   location                      = local.location
+#   resource_group_name           = data.azurerm_resource_group.network.name
+#   disable_bgp_route_propagation = lookup(each.value, "disable_bgp_route_propagation", null)
 
-  dynamic "route" {
-    for_each = lookup(each.value, "routes", null)
-    content {
-      name                   = lookup(route.value, "name", null)
-      address_prefix         = lookup(route.value, "address_prefix", null)
-      next_hop_type          = lookup(route.value, "next_hop_type", null)
-      next_hop_in_ip_address = lookup(route.value, "next_hop_in_ip_address", null)
-    }
-  }
-  tags = local.tags
-}
+#   dynamic "route" {
+#     for_each = lookup(each.value, "routes", null)
+#     content {
+#       name                   = lookup(route.value, "name", null)
+#       address_prefix         = lookup(route.value, "address_prefix", null)
+#       next_hop_type          = lookup(route.value, "next_hop_type", null)
+#       next_hop_in_ip_address = lookup(route.value, "next_hop_in_ip_address", null)
+#     }
+#   }
+#   tags = local.tags
+# }
 
 locals {
   subnet_names_with_route_table = [for x in var.subnets : "${x.vnet_key}_${x.name}" if lookup(x, "rt_key", "null") != "null"]
@@ -141,33 +143,33 @@ resource "azurerm_subnet_route_table_association" "route_table_associations" {
 # - Network Security Group
 # -
 
-resource "azurerm_network_security_group" "nsgs" {
-  for_each            = var.network_security_groups
-  name                = "${var.net_prefix}-nsg${each.value["id"]}"
-  location            = local.location
-  resource_group_name = data.azurerm_resource_group.network.name
+# resource "azurerm_network_security_group" "nsgs" {
+#   for_each            = var.network_security_groups
+#   name                = "${var.net_prefix}-nsg${each.value["id"]}"
+#   location            = local.location
+#   resource_group_name = data.azurerm_resource_group.network.name
 
-  dynamic "security_rule" {
-    for_each = each.value["security_rules"]
-    content {
-      description                  = lookup(security_rule.value, "description", null)
-      direction                    = lookup(security_rule.value, "direction", null)
-      name                         = lookup(security_rule.value, "name", null)
-      access                       = lookup(security_rule.value, "access", null)
-      priority                     = lookup(security_rule.value, "priority", null)
-      source_address_prefix        = lookup(security_rule.value, "source_address_prefix", null)
-      source_address_prefixes      = lookup(security_rule.value, "source_address_prefixes", null)
-      destination_address_prefix   = lookup(security_rule.value, "destination_address_prefix", null)
-      destination_address_prefixes = lookup(security_rule.value, "destination_address_prefixes", null)
-      destination_port_range       = lookup(security_rule.value, "destination_port_range", null)
-      destination_port_ranges      = lookup(security_rule.value, "destination_port_ranges", null)
-      protocol                     = lookup(security_rule.value, "protocol", null)
-      source_port_range            = lookup(security_rule.value, "source_port_range", null)
-      source_port_ranges           = lookup(security_rule.value, "source_port_ranges", null)
-    }
-  }
-  tags = local.tags
-}
+#   dynamic "security_rule" {
+#     for_each = each.value["security_rules"]
+#     content {
+#       description                  = lookup(security_rule.value, "description", null)
+#       direction                    = lookup(security_rule.value, "direction", null)
+#       name                         = lookup(security_rule.value, "name", null)
+#       access                       = lookup(security_rule.value, "access", null)
+#       priority                     = lookup(security_rule.value, "priority", null)
+#       source_address_prefix        = lookup(security_rule.value, "source_address_prefix", null)
+#       source_address_prefixes      = lookup(security_rule.value, "source_address_prefixes", null)
+#       destination_address_prefix   = lookup(security_rule.value, "destination_address_prefix", null)
+#       destination_address_prefixes = lookup(security_rule.value, "destination_address_prefixes", null)
+#       destination_port_range       = lookup(security_rule.value, "destination_port_range", null)
+#       destination_port_ranges      = lookup(security_rule.value, "destination_port_ranges", null)
+#       protocol                     = lookup(security_rule.value, "protocol", null)
+#       source_port_range            = lookup(security_rule.value, "source_port_range", null)
+#       source_port_ranges           = lookup(security_rule.value, "source_port_ranges", null)
+#     }
+#   }
+#   tags = local.tags
+# }
 
 locals {
   subnet_names_network_security_group = [for x in var.subnets : "${x.vnet_key}_${x.name}" if lookup(x, "nsg_key", "null") != "null"]
@@ -277,26 +279,25 @@ resource "azurerm_bastion_host" "bastions" {
 # - Public Ip
 # -
 
-resource "azurerm_public_ip" "pips" {
-  for_each                = var.pips
-  name                    = "${var.net_prefix}-${each.value["prefix"]}-pip${each.value["id"]}"
-  location                = local.location
-  resource_group_name     = data.azurerm_resource_group.network.name
-  sku                     = lookup(each.value, "sku", "Basic")
-  allocation_method       = lookup(each.value, "allocation_method", "Static")
-  ip_version              = lookup(each.value, "ip_version", "IPv4")
-  idle_timeout_in_minutes = lookup(each.value, "idle_timeout_in_minutes", null)
-  domain_name_label       = lookup(each.value, "domain_name_label", null)
-  reverse_fqdn            = lookup(each.value, "reverse_fqdn", null)
-  zones                   = lookup(each.value, "zones", null)
-  tags                    = local.tags
-}
+# resource "azurerm_public_ip" "pips" {
+#   for_each                = var.pips
+#   name                    = "${var.net_prefix}-${each.value["prefix"]}-pip${each.value["id"]}"
+#   location                = local.location
+#   resource_group_name     = data.azurerm_resource_group.network.name
+#   sku                     = lookup(each.value, "sku", "Basic")
+#   allocation_method       = lookup(each.value, "allocation_method", "Static")
+#   ip_version              = lookup(each.value, "ip_version", "IPv4")
+#   idle_timeout_in_minutes = lookup(each.value, "idle_timeout_in_minutes", null)
+#   domain_name_label       = lookup(each.value, "domain_name_label", null)
+#   reverse_fqdn            = lookup(each.value, "reverse_fqdn", null)
+#   zones                   = lookup(each.value, "zones", null)
+#   tags                    = local.tags
+# }
 
 # -
 # - Virtual Network Peering
 # -
 
-data "azurerm_subscription" "current" {}
 
 # resource "azurerm_virtual_network_peering" "peers" {
 #   for_each                     = var.vnets_to_peer
